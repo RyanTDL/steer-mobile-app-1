@@ -7,7 +7,6 @@ import { ChatContext } from "./ChatContext";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Unsubscribe } from "firebase/auth";
 import { SafeAreaView } from "react-native-safe-area-context";
-import SearchBar from "./components/SearchBar";
 import SPACING from "../../config/SPACINGS";
 import H3 from "../../custom_components/typography/H3";
 import COLORS from "../../config/COLORS";
@@ -143,7 +142,7 @@ const ChatList = ({ navigation }: ChatListProps) => {
 
   return (
     <SafeAreaView style={styles.background}>
-      <SearchBar />
+      <H1 style={styles.header}>Chats</H1>
       {chats.length === 0 ? (
         <View style={styles.noChatsContainer}>
           <H1 style={styles.noChatsText}>You have no active chats.</H1>
@@ -185,6 +184,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.LIGHTACCENT,
     paddingTop: 0,
+  },
+  header: {
+    textAlign: "center",
+    marginVertical: SPACINGS.MD,
   },
   chatContainer: {
     flexDirection: "row", // Arrange children horizontally

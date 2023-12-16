@@ -15,6 +15,7 @@ import BackNextButtonRow from "./components/BackNextButtonRow";
 import InterestOption from "./components/InterestOption";
 import { LinearProgress } from "@rneui/themed";
 import { TripInputsContext } from "./components/TripInputsContext";
+import BodyText from "../../custom_components/typography/BodyText";
 
 interface TripInterestSelectionProps {
   navigation: NativeStackNavigationProp<any>;
@@ -53,8 +54,7 @@ function TripInterestSelection({ navigation }: TripInterestSelectionProps) {
         variant="determinate"
       />
       <View style={styles.container}>
-        <H1>What are your interests?</H1>
-        <H3>Choose one or more</H3>
+        <H1>Pick your interests:</H1>
         <View style={styles.optionsContainer}>
           <InterestOption
             isPressed={outdoors}

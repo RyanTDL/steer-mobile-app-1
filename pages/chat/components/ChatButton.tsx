@@ -3,7 +3,7 @@ import { Pressable, StyleSheet } from "react-native";
 import { firebaseAuth, firestore } from "../../../firebaseConfig";
 import { ChatContext } from "../ChatContext";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { FAB, Icon } from "@rneui/themed";
+import { Icon } from "@rneui/themed";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import SPACINGS from "../../../config/SPACINGS";
 import COLORS from "../../../config/COLORS";
@@ -20,12 +20,12 @@ type launchChatPageNavigationProp = NativeStackNavigationProp<any>;
 
 type LaunchChatProps = {
   navigation: launchChatPageNavigationProp;
-  hostID: string;
+  recipientID: string;
 };
 
 const auth = firebaseAuth;
 
-const ChatButton = ({ navigation, hostID }: LaunchChatProps) => {
+const ChatButton = ({ navigation, recipientID }: LaunchChatProps) => {
   const { dispatch } = useContext(ChatContext);
   const currentUser = {
     displayName: "John Doe",
@@ -36,14 +36,16 @@ const ChatButton = ({ navigation, hostID }: LaunchChatProps) => {
   const currentUserId = currentUser.uid || "";
 
   const handleSelectLaunchChat = async () => {
-    const hostInfo = {
-      uid: hostID,
+    const recipientInfo = {
+      uid: recipientID,
     };
 
-    const hostId = hostInfo.uid;
+    const recipientId = recipientInfo.uid;
 
     const chatId =
-      currentUserId < hostId ? currentUserId + hostId : hostId + currentUserId;
+      currentUserId < recipientId
+        ? currentUserId + recipientId
+        : recipientId + currentUserId;
 
     console.log(chatId);
 
@@ -56,7 +58,7 @@ const ChatButton = ({ navigation, hostID }: LaunchChatProps) => {
         await setDoc(doc(firestore, "chats", chatId), {
           messages: {},
           userIdA: currentUserId,
-          userIdB: hostId,
+          userIdB: recipientId,
         });
 
         // Update the user's "chats" array in the "userChats" collection
@@ -75,7 +77,7 @@ const ChatButton = ({ navigation, hostID }: LaunchChatProps) => {
             {
               chatId: chatId,
               ["userInfo"]: {
-                uid: hostId,
+                uid: recipientId,
               },
             },
           ];
@@ -95,7 +97,7 @@ const ChatButton = ({ navigation, hostID }: LaunchChatProps) => {
           console.log("User document not found.");
         }
 
-        const hostChatsDocRef = doc(firestore, "userChats", hostId);
+        const hostChatsDocRef = doc(firestore, "userChats", recipientId);
         const hostChatsDoc = await getDoc(hostChatsDocRef);
 
         if (hostChatsDoc.exists()) {
@@ -140,7 +142,7 @@ const ChatButton = ({ navigation, hostID }: LaunchChatProps) => {
 
     dispatch({
       type: "GET_CHAT_ID",
-      payload: hostInfo,
+      payload: recipientInfo,
     });
 
     navigation.navigate("Chat", {
@@ -153,7 +155,7 @@ const ChatButton = ({ navigation, hostID }: LaunchChatProps) => {
     <Pressable style={styles.button} onPress={handleSelectLaunchChat}>
       <Icon
         type="material-community"
-        name="message-outline"
+        name="message-text-outline"
         color={COLORS.WHITE}
         size={ICONSIZES.XS}
       />

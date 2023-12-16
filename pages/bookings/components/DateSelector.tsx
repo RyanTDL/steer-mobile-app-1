@@ -34,6 +34,7 @@ export default function DateSelector(props: DateSelectorProps) {
       props.setNumNights(newNumNights);
       props.setStartDate(selectedStartDate);
       props.setEndDate(date);
+      setShowCalendar(false);
     }
   };
 

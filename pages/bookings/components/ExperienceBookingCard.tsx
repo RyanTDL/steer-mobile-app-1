@@ -71,6 +71,7 @@ export default function ExperienceBookingCard(
       selectedDate: selectedDate,
       guestId: user?.uid ?? "requester's id could not be obtained",
       requestTime: new Date(),
+      isApproved: false,
       paymentStatus: "pending",
     });
     props.navigation.navigate("RequestConfirmation", {

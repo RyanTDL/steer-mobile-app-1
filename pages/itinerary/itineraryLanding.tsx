@@ -36,24 +36,26 @@ function ItineraryLanding({ navigation }: ItineraryLandingProps) {
   return (
     <SafeAreaView style={styles.background}>
       <View style={styles.container}>
-        <H1>Build your perfect itinerary in just 3 simple steps!</H1>
+        <H1 style={{ textAlign: "center" }}>
+          Build your perfect itinerary in just 3 simple steps!
+        </H1>
         <View style={styles.stepsContainer}>
           <SimpleStep
             iconName="clipboard-plus-outline"
             heading="Add trip details"
-            text="When's the trip? Who's coming? Fill us in..."
+            text="When's the trip? Who's coming? Fill us in."
             style={styles.simpleStep}
           />
           <SimpleStep
             iconName="clipboard-text-outline"
             heading="Choose  preferences"
-            text="Select your interests and budget for the trip..."
+            text="Select your interests and holiday style."
             style={styles.simpleStep}
           />
           <SimpleStep
             iconName="clipboard-edit-outline"
             heading="Edit the plan!"
-            text="Add or remove activities to create the perfect itinerary..."
+            text="Add or remove activities to create the perfect itinerary."
             style={styles.simpleStep}
           />
         </View>

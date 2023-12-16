@@ -10,19 +10,27 @@ import {
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import HeartButton from "./HeartButton";
 import ImageCarousel from "./ImageCarousel";
-import { getDocs, collection, DocumentData } from "firebase/firestore";
-import { firestore } from "../../../firebaseConfig";
+import {
+  getDocs,
+  collection,
+  DocumentData,
+  doc,
+  getDoc,
+} from "firebase/firestore";
+import { firebaseAuth, firestore } from "../../../firebaseConfig";
 import { RefreshControl } from "react-native-gesture-handler";
 import SPACINGS from "../../../config/SPACINGS";
 import FONTSIZES from "../../../config/FONTSIZES";
 import COLORS from "../../../config/COLORS";
 import SustainabilityRating from "./SustainabilityRating";
 import CATEGORIES from "../../../config/CATEGORIES";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 interface ExploreItemCarouselProps {
   collectionName: string;
   items?: DocumentData[];
   navigation: NativeStackNavigationProp<any>;
+  isFavourite?: boolean;
 }
 
 const width = Dimensions.get("screen").width;
@@ -35,12 +43,25 @@ function ExploreItemCarousel({
   navigation,
   collectionName,
   items,
+  isFavourite,
 }: ExploreItemCarouselProps) {
   const [dbItems, setDbItems] = React.useState<DocumentData[]>([]);
   const [refreshing, setRefreshing] = useState(true);
   const isAccommodation = collectionName === CATEGORIES[0].dbName;
+  const [user, loading, error] = useAuthState(firebaseAuth);
+  const [userFavouritedItems, setUserFavouritedItems] = useState<String[]>([]);
 
   async function fetchData() {
+    const profileRef = doc(firestore, "users", user?.uid as any);
+    const userProfile = await getDoc(profileRef);
+    const currUserDoc = userProfile.data();
+    const userSavedAccommodationIDs =
+      currUserDoc?.favouritedAccommodations ?? [];
+    const userSavedExperienceIDs = currUserDoc?.favouritedExperiences ?? [];
+    const userSavedIDs = userSavedAccommodationIDs.concat(
+      userSavedExperienceIDs
+    );
+    setUserFavouritedItems(userSavedIDs);
     if (!items) {
       const currItems: DocumentData[] = [];
       const querySnapshot = await getDocs(
@@ -56,7 +77,9 @@ function ExploreItemCarousel({
 
   useEffect(() => {
     fetchData();
-    setDbItems(items ?? []);
+    if (items) {
+      setDbItems(items);
+    }
   }, [collectionName]);
 
   return (
@@ -75,7 +98,13 @@ function ExploreItemCarousel({
                 numFeatures={item.sustainabilityFeatures?.length ?? 0}
               />
             )}
-            <HeartButton listingCollection={collectionName} item={item} />
+            <HeartButton
+              listingCollection={collectionName}
+              item={item}
+              defaultState={
+                isFavourite ?? userFavouritedItems.includes(item.firestoreID)
+              }
+            />
           </View>
 
           <View style={styles.card}>

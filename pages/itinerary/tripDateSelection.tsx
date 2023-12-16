@@ -5,88 +5,53 @@ import {
   View,
   Platform,
   StatusBar,
-  Pressable,
 } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
 import COLORS from "../../config/COLORS";
 import SPACINGS from "../../config/SPACINGS";
 import H1 from "../../custom_components/typography/H1";
-import SimpleStep from "./components/SimpleStep";
 import H3 from "../../custom_components/typography/H3";
 import BackNextButtonRow from "./components/BackNextButtonRow";
 import { TripInputsContext } from "./components/TripInputsContext";
-import { LinearProgress } from "@rneui/themed";
+import { LinearProgress, ButtonGroup } from "@rneui/themed";
+import DateSelector from "../bookings/components/DateSelector";
+import FONTSIZES from "../../config/FONTSIZES";
+import NumberToggle from "../post/components/NumberToggle";
+import BodyText from "../../custom_components/typography/BodyText";
 
 interface TripDateSelectionProps {
   navigation: NativeStackNavigationProp<any>;
 }
 
 function TripDateSelection({ navigation }: TripDateSelectionProps) {
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const [mode, setMode] = useState<any>("date");
-  const [show, setShow] = useState(false);
-  const [dateString, setDateString] = useState("");
-  const { setTripLength } = React.useContext(TripInputsContext);
+  const [numNights, setNumNights] = useState<number>(0);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const [budget, setBudget] = useState<number>(1000);
+  const [numPax, setNumPax] = useState(1);
+  const { setTripLength, setTripBudget } = React.useContext(TripInputsContext);
 
-  const onChange = (
-    event: DateTimePickerEvent,
-    selectedDate: Date | undefined
-  ) => {
-    const currentDate = selectedDate;
-    const year = currentDate?.getFullYear();
-    const month = (currentDate?.getMonth() ?? 0) + 1; // getMonth() is zero-based
-    const day = currentDate?.getDate();
-    const formattedDate = `${day}-${month}-${year}`;
-    setShow(false);
-    setDate(currentDate);
-    setDateString(formattedDate);
-  };
-
-  const showMode = (currentMode: any) => {
-    setShow(true);
-    setMode(currentMode);
-  };
-
-  const showDatepicker = () => {
-    showMode("date");
-  };
-
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [endMode, setEndMode] = useState<any>("date");
-  const [showEndDate, setShowEndDate] = useState(false);
-  const [endDateString, setEndDateString] = useState("");
-
-  const onChangeEnd = (
-    event: DateTimePickerEvent,
-    selectedDate: Date | undefined
-  ) => {
-    const currentDate = selectedDate;
-    const year = currentDate?.getFullYear();
-    const month = (currentDate?.getMonth() ?? 0) + 1; // getMonth() is zero-based
-    const day = currentDate?.getDate();
-    const formattedDate = `${day}-${month}-${year}`;
-    setShowEndDate(false);
-    setEndDate(currentDate);
-    setEndDateString(formattedDate);
-  };
-
-  const showEndMode = (currentMode: any) => {
-    setShowEndDate(true);
-    setEndMode(currentMode);
-  };
-
-  const showEndDatepicker = () => {
-    showEndMode("date");
+  const handleBudgetPress = (option: string) => {
+    switch (option) {
+      case "0":
+        setBudget(50);
+        break;
+      case "1":
+        setBudget(100);
+        break;
+      case "2":
+        setBudget(500);
+        break;
+      default:
+        break;
+    }
   };
 
   const handleNextPress = () => {
-    if (date !== undefined && endDate !== undefined && date < endDate) {
-      const diffTime = Math.abs(endDate.getTime() - date.getTime());
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      setTripLength(diffDays);
+    if (startDate && endDate && startDate < endDate) {
+      setTripLength(numNights);
+      setTripBudget(budget);
       navigation.navigate("TripPeopleSelection", {
         navigation: navigation,
       });
@@ -103,56 +68,53 @@ function TripDateSelection({ navigation }: TripDateSelectionProps) {
         variant="determinate"
       />
       <View style={styles.container}>
-        <H1>When's the trip?</H1>
-        <View style={styles.stepsContainer}>
-          <View style={styles.innerContainer}>
-            <SimpleStep
-              iconName="calendar-month-outline"
-              heading="Start Date"
-              text="When does the trip start?"
-              style={styles.simpleStep}
+        <H1 style={{ marginBottom: SPACINGS.XL }}>Trip details:</H1>
+        <View
+          style={[styles.stepsContainer, { paddingVertical: SPACINGS.XXL }]}
+        >
+          <H3>Dates:</H3>
+          <View>
+            <DateSelector
+              setNumNights={setNumNights}
+              setStartDate={setStartDate}
+              setEndDate={setEndDate}
             />
-            <View style={styles.datePicker}>
-              {date && <H3 style={{ width: "60%" }}>Start: {dateString}</H3>}
-              {show && (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={date ?? new Date()}
-                  mode={mode}
-                  onChange={onChange}
-                />
-              )}
-              <Pressable onPress={showDatepicker} style={styles.button}>
-                <H3>Select a date</H3>
-              </Pressable>
-            </View>
-          </View>
-          <View style={styles.innerContainer}>
-            <SimpleStep
-              iconName="calendar-month-outline"
-              heading="End Date"
-              text="When does the trip end?"
-              style={styles.simpleStep}
-            />
-            <View style={styles.datePicker}>
-              {endDate && (
-                <H3 style={{ width: "60%" }}>End: {endDateString}</H3>
-              )}
-              {showEndDate && (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={endDate ?? new Date()}
-                  mode={endMode}
-                  onChange={onChangeEnd}
-                />
-              )}
-              <Pressable onPress={showEndDatepicker} style={styles.button}>
-                <H3>Select a date</H3>
-              </Pressable>
-            </View>
           </View>
         </View>
+        <View style={styles.stepsContainer}>
+          <H3>Budget:</H3>
+          <View
+            style={{
+              flex: 1,
+              alignItems: "flex-end",
+            }}
+          >
+            <ButtonGroup
+              buttons={["$", "$$", "$$$"]}
+              selectedIndex={selectedIndex}
+              onPress={(value) => {
+                setSelectedIndex(value);
+                handleBudgetPress(value);
+              }}
+              containerStyle={styles.buttonGroup}
+              selectedButtonStyle={{
+                backgroundColor: COLORS.PRIMARY,
+              }}
+              textStyle={{
+                fontSize: FONTSIZES.MD,
+                fontFamily: "Bitter-Medium",
+              }}
+            />
+          </View>
+        </View>
+        <View
+          style={[styles.stepsContainer, { paddingVertical: SPACINGS.XXL }]}
+        >
+          <H3>Pax:</H3>
+          <NumberToggle numItems={numPax} setNumItems={setNumPax} min={1} />
+        </View>
         <BackNextButtonRow
+          nextDisabled={startDate == null || endDate == null}
           navigation={navigation}
           nextPage="TripPeopleSelection"
           onNextPress={handleNextPress}
@@ -175,14 +137,24 @@ const styles = StyleSheet.create({
     margin: SPACINGS.MD,
   },
   stepsContainer: {
+    backgroundColor: COLORS.LIGHTBG,
+    borderRadius: SPACINGS.XL,
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "space-evenly",
-    margin: SPACINGS.MD,
+    padding: SPACINGS.MD,
+    margin: SPACINGS.SM,
+    width: "100%",
   },
-  innerContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginVertical: SPACINGS.XL,
+  buttonGroup: {
+    height: 40,
+    width: "60%",
+    paddingVertical: 0,
+    borderWidth: 0,
+    borderRadius: SPACINGS.MD,
+  },
+  hintText: {
+    textAlign: "right",
   },
   simpleStep: {
     marginVertical: SPACINGS.XL,

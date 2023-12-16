@@ -20,7 +20,7 @@ import { ScrollView } from "react-native-gesture-handler";
 import {
   getAccommodationOption,
   getExperiencesOptions,
-} from "./components/itineraryGenerationHelper";
+} from "./functions/itineraryGenerationHelper";
 import { DocumentData } from "firebase/firestore";
 import ExploreItemCarousel from "../explore/components/ExploreItemCarousel";
 import CATEGORIES from "../../config/CATEGORIES";

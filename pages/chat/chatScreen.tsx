@@ -1,5 +1,13 @@
 import React, { useContext, useEffect, useState } from "react";
-import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Dimensions,
+} from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChatContext } from "./ChatContext";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -28,6 +36,8 @@ type MessagesProps = {
   navigation: messagesNavigationProp;
 };
 
+const { width, height } = Dimensions.get("screen");
+
 const ChatScreen = ({ navigation }: MessagesProps) => {
   const { data } = useContext(ChatContext);
   const [messages, setMessages] = useState<any[]>([]);
@@ -51,7 +61,7 @@ const ChatScreen = ({ navigation }: MessagesProps) => {
     fetchRecipientDisplayName();
   }, [recipientId]);
 
-  console.log("data: ", data);
+  //console.log("data: ", data);
 
   useEffect(() => {
     const documentRef = doc(collection(firestore, "chats"), data.chatId);
@@ -65,8 +75,8 @@ const ChatScreen = ({ navigation }: MessagesProps) => {
     return () => unsubscribe();
   }, [data.chatId]);
 
-  console.log(messages);
-  console.log(recipientDisplayName);
+  // console.log(messages);
+  // console.log(recipientDisplayName);
 
   return (
     <SafeAreaView style={styles.background}>
@@ -77,14 +87,10 @@ const ChatScreen = ({ navigation }: MessagesProps) => {
         <H1 style={styles.username}>{recipientDisplayName}</H1>
       </View>
       <ScrollView>
-        <View>
-          {messages.length > 0 &&
-            messages.map((m: any) => <Message message={m} key={m.id} />)}
-        </View>
+        {messages.length > 0 &&
+          messages.map((m: any) => <Message message={m} key={m.id} />)}
       </ScrollView>
-      <View>
-        <Input />
-      </View>
+      <Input />
     </SafeAreaView>
   );
 };

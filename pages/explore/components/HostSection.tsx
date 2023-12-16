@@ -51,7 +51,7 @@ const HostSection: React.FC<HostSectionProps> = ({ navigation, hostID }) => {
     <View style={styles.mainContainer}>
       <View style={styles.headerContainer}>
         <H2>Host</H2>
-        <ChatButton navigation={navigation} hostID={hostID} />
+        <ChatButton navigation={navigation} recipientID={hostID} />
       </View>
       <View style={styles.innerContainer}>
         <View style={styles.avatarContainer}>

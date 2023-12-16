@@ -23,7 +23,14 @@ const PeopleOption = ({
   onPress,
 }: PeopleOptionProps) => {
   return (
-    <Pressable style={[styles.mainContainer, style]} onPress={() => onPress()}>
+    <Pressable
+      style={[
+        styles.mainContainer,
+        { borderColor: isPressed ? COLORS.PRIMARY : COLORS.LIGHTBG },
+        style,
+      ]}
+      onPress={() => onPress()}
+    >
       <View style={styles.indicatorContainer}>
         <Icon
           color={COLORS.PRIMARY}
@@ -50,6 +57,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     width: "100%",
     padding: SPACINGS.MD,
+    borderWidth: 4,
     borderRadius: SPACINGS.XL,
     marginVertical: SPACINGS.SM,
   },

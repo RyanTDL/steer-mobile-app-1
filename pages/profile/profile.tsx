@@ -1,5 +1,13 @@
-import React from "react";
-import { StyleSheet, Text, View, SafeAreaView, ScrollView } from "react-native";
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  View,
+  SafeAreaView,
+  ScrollView,
+  Dimensions,
+  Platform,
+  StatusBar,
+} from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import UploadPic from "./components/UploadPic";
 import UploadInfo from "./components/UploadInfo";
@@ -17,9 +25,11 @@ import {
 import SPACINGS from "../../config/SPACINGS";
 import COLORS from "../../config/COLORS";
 import FONTSIZES from "../../config/FONTSIZES";
-import ExploreItemCarousel from "../explore/components/ExploreItemCarousel";
 import CATEGORIES from "../../config/CATEGORIES";
 import H3 from "../../custom_components/typography/H3";
+import { ButtonGroup, Tab, TabView } from "@rneui/themed";
+import ProfileCarousel from "./components/ProfileCarousel";
+import RequestsContainer from "./components/RequestsContainer";
 
 type RootStackParamList = {
   Profile: undefined;
@@ -43,30 +53,43 @@ interface ProfileData {
   uid: string;
 }
 
+const width = Dimensions.get("window").width;
+
 const ProfilePage = ({ navigation }: Props) => {
-  //Used to set user info
+  // for managing tabs
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  // Used to set user info
   const [username, setUsername] = React.useState("");
   const [usernameModal, setUsernameModal] = React.useState(false);
-  //Used for user info retrieval
   const [user, loading, error] = useAuthState(firebaseAuth);
   const [profileInfo, setProfileInfo] = React.useState<ProfileData | any>({});
+  // Used to retrieve user's favourited listings
   const [userSavedAccommodations, setUserSavedAccommodations] = React.useState<
     DocumentData[]
   >([]);
   const [userSavedExperiences, setUserSavedExperiences] = React.useState<
     DocumentData[]
   >([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoadingFavs, setIsLoadingFavs] = React.useState(true);
+  // Used to retrieve user's personal listings
+  const [userOwnedAccommodations, setUserOwnedAccommodations] = React.useState<
+    DocumentData[]
+  >([]);
+  const [userOwnedExperiences, setUserOwnedExperiences] = React.useState<
+    DocumentData[]
+  >([]);
+  const [isLoadingPersonal, setIsLoadingPersonal] = React.useState(true);
 
-  //Retrieves profile info when page first rendered
+  // Retrieves profile info and favourited listings
   const getProfile = async () => {
     try {
+      // get user profile info
       const profileRef = doc(firestore, "users", user?.uid as any);
       const userProfile = await getDoc(profileRef);
       const currUserDoc = userProfile.data();
       setProfileInfo(currUserDoc);
 
-      // get accommodations favourited by user
+      // get accommodations favourited by user (if any)
       const userSavedAccommodationIDs =
         currUserDoc?.favouritedAccommodations ?? [];
       if (userSavedAccommodationIDs.length > 0) {
@@ -86,7 +109,7 @@ const ProfilePage = ({ navigation }: Props) => {
         setUserSavedAccommodations(userSavedAccommodationDocs);
       }
 
-      // get experiences favourited by user
+      // get experiences favourited by user (if any)
       const userSavedExperienceIDs = currUserDoc?.favouritedExperiences ?? [];
       if (userSavedExperienceIDs.length > 0) {
         const userSavedExperienceDocs: DocumentData[] = [];
@@ -107,14 +130,60 @@ const ProfilePage = ({ navigation }: Props) => {
     } catch (error) {
       console.error("Error retrieving profile data:", error);
     }
-    setIsLoading(false);
+    setIsLoadingFavs(false);
   };
 
   React.useEffect(() => {
     getProfile();
   }, []);
 
-  //Code for profile picture upload
+  // Retrieves personally owned listings
+  const getPersonalPosts = async () => {
+    try {
+      // get accommodations owned by user (if any)
+      const userOwnedAccommodationIDs = profileInfo?.ownedAccommodations ?? [];
+      if (userOwnedAccommodationIDs.length > 0) {
+        const userOwnedAccommodationDocs: DocumentData[] = [];
+        for (let i = 0; i < userOwnedAccommodationIDs.length; i++) {
+          const postRef = doc(
+            firestore,
+            "accommodations",
+            userOwnedAccommodationIDs[i]
+          );
+          const postDoc = await getDoc(postRef);
+          const postDocData = postDoc.data();
+          if (postDocData) {
+            userOwnedAccommodationDocs.push(postDocData);
+          }
+        }
+        setUserOwnedAccommodations(userOwnedAccommodationDocs);
+      }
+
+      // get experiences owned by user (if any)
+      const userOwnedExperienceIDs = profileInfo?.ownedExperiences ?? [];
+      if (userOwnedExperienceIDs.length > 0) {
+        const userOwnedExperienceDocs: DocumentData[] = [];
+        for (let i = 0; i < userOwnedExperienceIDs.length; i++) {
+          const postRef = doc(
+            firestore,
+            "experiences",
+            userOwnedExperienceIDs[i]
+          );
+          const postDoc = await getDoc(postRef);
+          const postDocData = postDoc.data();
+          if (postDocData) {
+            userOwnedExperienceDocs.push(postDocData);
+          }
+        }
+        setUserOwnedExperiences(userOwnedExperienceDocs);
+      }
+    } catch (error) {
+      console.error("Error retrieving personal posts:", error);
+    }
+    setIsLoadingPersonal(false);
+  };
+
+  // Code for profile picture upload
   const checkForCameraRollPermission = async () => {
     const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
     if (status != "granted") {
@@ -126,11 +195,9 @@ const ProfilePage = ({ navigation }: Props) => {
     }
   };
 
-  React.useEffect(() => {
-    checkForCameraRollPermission();
-  }, []);
-
+  // handles profile picture upload
   const addImage = async () => {
+    checkForCameraRollPermission();
     let _image = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images, //determines the type of file used: Image, video or both
       allowsEditing: true, //provides an editing interface to crop/edit image after it is selected from photo library
@@ -145,11 +212,14 @@ const ProfilePage = ({ navigation }: Props) => {
     }
   };
 
+  /**
+   * Uploads image to firebase storage
+   * Why are we using XMLHttpRequest? See:
+   * https://github.com/expo/expo/issues/2402#issuecomment-443726662
+   * @param saved_image
+   */
   const saveProfilePic = async (saved_image: ImagePicker.ImagePickerAsset) => {
     try {
-      //Uploads image to firebase storage
-      // Why are we using XMLHttpRequest? See:
-      // https://github.com/expo/expo/issues/2402#issuecomment-443726662
       const blob: Blob = await new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.onload = function () {
@@ -182,7 +252,7 @@ const ProfilePage = ({ navigation }: Props) => {
     }
   };
 
-  //Code for profile info upload
+  //handles username update
   const saveUsername = async () => {
     try {
       const docRef = doc(firestore, "users", user!.uid);
@@ -198,7 +268,7 @@ const ProfilePage = ({ navigation }: Props) => {
   return (
     <SafeAreaView style={styles.mainContainer}>
       {/* Profile Info */}
-      <View style={[styles.profile, { flex: 2 }]}>
+      <View style={styles.profile}>
         <UploadPic
           url={profileInfo ? profileInfo["profilePic"] : ""} //sets placeholder in case user data does not exist
           addImage={addImage}
@@ -223,44 +293,89 @@ const ProfilePage = ({ navigation }: Props) => {
 
       {/* Posts */}
       {/* marginBottom to leave space for the NavBar */}
-      <View style={[styles.posts, { flex: 5, marginBottom: 0 }]}>
-        <View style={styles.header}>
-          <Text
-            style={[styles.headerText, { width: 300, textAlign: "center" }]}
-          >
-            Favourited
-          </Text>
-        </View>
-
-        {!isLoading && (
-          <ScrollView style={{ flex: 1 }}>
-            <H3
-              style={{
-                marginTop: SPACINGS.XL,
-                marginBottom: -SPACINGS.MD,
-                alignSelf: "center",
-              }}
-            >
-              Accommodations
-            </H3>
-            <ExploreItemCarousel
+      <View style={styles.posts}>
+        <ButtonGroup
+          buttons={["Favourites", "Bookings", "My listings"]}
+          selectedIndex={selectedIndex}
+          onPress={(value) => {
+            setSelectedIndex(value);
+            if (value == 1) {
+              getPersonalPosts();
+            }
+          }}
+          containerStyle={{
+            width: "80%",
+            borderRadius: SPACINGS.XL,
+            marginVertical: SPACINGS.LG,
+          }}
+          selectedTextStyle={{
+            fontFamily: "Bitter-Medium",
+            fontSize: FONTSIZES.MD,
+          }}
+          textStyle={{
+            fontFamily: "Bitter-Medium",
+            fontSize: FONTSIZES.MD,
+          }}
+          buttonStyle={{
+            backgroundColor: COLORS.WHITE,
+          }}
+          selectedButtonStyle={{
+            backgroundColor: COLORS.PRIMARY,
+          }}
+        />
+        {!isLoadingFavs && selectedIndex == 0 && (
+          <ScrollView>
+            <ProfileCarousel
               navigation={navigation}
-              items={userSavedAccommodations}
-              collectionName={CATEGORIES[0].dbName}
+              title="Accommodations"
+              noDataMessage="You have not saved any accommodations!"
+              carouselData={userSavedAccommodations}
+              carouselCollectionName={CATEGORIES[0].dbName}
+              isFavourite={true}
             />
+            <ProfileCarousel
+              navigation={navigation}
+              title="Experiences"
+              noDataMessage="You have not saved any experiences!"
+              carouselData={userSavedExperiences}
+              carouselCollectionName={CATEGORIES[1].dbName}
+              isFavourite={true}
+            />
+          </ScrollView>
+        )}
+        {!isLoadingPersonal && selectedIndex == 1 && (
+          <ScrollView style={{ width: "80%" }}>
             <H3
               style={{
-                marginTop: SPACINGS.XL,
-                marginBottom: -SPACINGS.MD,
+                marginTop: SPACINGS.MD,
+                marginBottom: SPACINGS.LG,
                 alignSelf: "center",
               }}
             >
-              Experiences
+              Current Requests
             </H3>
-            <ExploreItemCarousel
+            <RequestsContainer
+              userOwnedAccommodations={userOwnedAccommodations}
+              userOwnedExperiences={userOwnedExperiences}
               navigation={navigation}
-              items={userSavedExperiences}
-              collectionName={CATEGORIES[1].dbName}
+            />
+          </ScrollView>
+        )}
+        {!isLoadingPersonal && selectedIndex == 2 && (
+          <ScrollView>
+            <ProfileCarousel
+              navigation={navigation}
+              title="Accommodations"
+              noDataMessage="You have not listed any accommodations!"
+              carouselData={userOwnedAccommodations}
+              carouselCollectionName={CATEGORIES[0].dbName}
+            />
+            <ProfileCarousel
+              navigation={navigation}
+              title="Experiences"
+              noDataMessage="You have not listed any experiences!"
+              carouselData={userOwnedExperiences}
+              carouselCollectionName={CATEGORIES[1].dbName}
             />
           </ScrollView>
         )}
@@ -276,29 +391,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.LIGHTACCENT,
     alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 0,
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight ?? 0 : 0,
   },
-
   profile: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    paddingTop: SPACINGS.MD,
+    paddingBottom: SPACINGS.LG,
   },
-
-  header: {
-    alignItems: "center",
+  innerContainer: {
     paddingVertical: SPACINGS.MD,
-    borderBottomWidth: 0.5,
-    borderColor: COLORS.DARKBG,
+    backgroundColor: "blue",
+    width: "100%",
+    alignContent: "center",
   },
-
   headerText: {
     fontFamily: "Bitter-Bold",
     fontSize: FONTSIZES.LG,
     color: COLORS.DARKBG,
   },
-
   posts: {
     backgroundColor: COLORS.LIGHTBG,
     width: "100%",
@@ -306,6 +418,42 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: SPACINGS.XL,
     justifyContent: "center",
     alignItems: "center",
+  },
+  activeTabTitle: {
+    color: COLORS.WHITE,
+    paddingVertical: SPACINGS.XXS,
+    paddingHorizontal: SPACINGS.XXS,
+    fontFamily: "Bitter-Bold",
+  },
+  inactiveTabTitle: {
+    color: COLORS.DARKBG,
+    paddingVertical: SPACINGS.XXS,
+    paddingHorizontal: SPACINGS.XXS,
+    fontFamily: "Bitter-Medium",
+  },
+  activeTabContainer: {
+    backgroundColor: COLORS.PRIMARY,
+    borderWidth: 1,
+    borderColor: COLORS.PRIMARY,
+    marginHorizontal: SPACINGS.SM,
+    borderRadius: SPACINGS.XL,
+    alignContent: "center",
+    justifyContent: "center",
+  },
+  inactiveTabContainer: {
+    backgroundColor: COLORS.LIGHTBG,
+    borderWidth: 1,
+    borderColor: COLORS.PRIMARY,
+    marginHorizontal: SPACINGS.SM,
+    borderRadius: SPACINGS.XL,
+    alignContent: "center",
+    justifyContent: "center",
+  },
+  tabView: {
+    backgroundColor: "red",
+  },
+  tabViewHeading: {
+    marginBottom: SPACINGS.SM,
   },
 
   // modalPopUp: {

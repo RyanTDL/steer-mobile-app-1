@@ -38,21 +38,23 @@ const BackNextButtonRow = ({
         />
         <H3 style={styles.leftButtonText}>Back</H3>
       </Pressable>
-      <Pressable
-        disabled={nextDisabled}
-        style={styles.button}
-        onPress={
-          onNextPress ? onNextPress : () => navigation.navigate(nextPage)
-        }
-      >
-        <H3 style={styles.rightButtonText}>Next</H3>
-        <Icon
-          color={COLORS.WHITE}
-          type="material-community"
-          name="arrow-right"
-          size={ICONSIZES.XS}
-        />
-      </Pressable>
+      {!nextDisabled && (
+        <Pressable
+          disabled={nextDisabled}
+          style={styles.button}
+          onPress={
+            onNextPress ? onNextPress : () => navigation.navigate(nextPage)
+          }
+        >
+          <H3 style={styles.rightButtonText}>Next</H3>
+          <Icon
+            color={COLORS.WHITE}
+            type="material-community"
+            name="arrow-right"
+            size={ICONSIZES.XS}
+          />
+        </Pressable>
+      )}
     </View>
   );
 };

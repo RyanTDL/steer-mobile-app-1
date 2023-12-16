@@ -18,10 +18,15 @@ import SPACINGS from "../../../config/SPACINGS";
 interface HeartButtonProps {
   listingCollection: string;
   item: DocumentData;
+  defaultState?: boolean;
 }
 
-function HeartButton({ listingCollection, item }: HeartButtonProps) {
-  const [isLiked, setIsLiked] = React.useState(false);
+function HeartButton({
+  listingCollection,
+  item,
+  defaultState,
+}: HeartButtonProps) {
+  const [isLiked, setIsLiked] = React.useState(defaultState ?? false);
   const [user, loading, error] = useAuthState(firebaseAuth);
 
   async function setSavedPost() {

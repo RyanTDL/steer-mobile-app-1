@@ -59,6 +59,7 @@ export default function AccommodationBookingCard(
       totalPrice: totalPrice,
       guestId: user?.uid ?? "requester's id could not be obtained",
       requestTime: new Date(),
+      isApproved: false,
       paymentStatus: "pending",
     });
     props.navigation.navigate("RequestConfirmation", {

@@ -27,8 +27,8 @@ const InterestOption = ({
       style={[
         styles.mainContainer,
         isPressed
-          ? { borderWidth: 2, borderColor: COLORS.PRIMARY }
-          : { borderWidth: 0, borderColor: COLORS.LIGHTACCENT },
+          ? { borderColor: COLORS.PRIMARY }
+          : { borderColor: COLORS.LIGHTACCENT },
         style,
       ]}
       onPress={() => onPress()}
@@ -54,6 +54,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     width: "45%",
     padding: SPACINGS.MD,
+    borderWidth: 4,
     borderRadius: SPACINGS.XL,
     marginVertical: SPACINGS.SM,
   },

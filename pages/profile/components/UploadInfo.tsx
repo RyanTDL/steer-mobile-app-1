@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderRadius: SPACINGS.XL,
+    borderRadius: SPACINGS.LG,
     marginVertical: SPACINGS.SM,
     width: 200,
     paddingVertical: SPACINGS.SM,
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     width: "60%",
     padding: SPACINGS.XS,
     paddingVertical: SPACINGS.SM,
-    borderRadius: SPACINGS.LG,
+    borderRadius: SPACINGS.XL,
     alignItems: "center",
   },
 
